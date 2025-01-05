@@ -9,11 +9,12 @@ class Creature:
         self.name = name
 
 class Monster(pygame.sprite.Sprite, Creature):
-    def __init__(self, name, surf):
+    def __init__(self, name, surf, simple_surf):
         super().__init__()
         self.image = surf
         self.rect = self.image.get_frect(bottomleft = (100, WINDOW_HEIGHT))
         self.get_data(name)
+        self.simple_image = simple_surf
 
 class Opponent(pygame.sprite.Sprite, Creature):
     def __init__(self, name, surf, groups):
