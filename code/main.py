@@ -3,6 +3,7 @@ from support import *
 from world_timer import Timer
 from monster import Monster, Opponent
 from random import choice
+from ui import UI
 
 class Game:
     def __init__(self):
@@ -16,18 +17,26 @@ class Game:
         # groups 
         self.all_sprites = pygame.sprite.Group()
 
-        #data
+        # data
         player_monster_list = ['Sparchu', 'Cleaf', 'Jacana']
         self.player_monsters = [Monster(name, self.back_surfs[name]) for name in player_monster_list]
         self.monster = self.player_monsters[0]
         self.all_sprites.add(self.monster)
-        self.opponent_choice = choice(list(self.front_surfs.keys()))
-        self.opponent = Opponent(self.opponent_choice , self.front_surfs[self.opponent_choice], self.all_sprites)
+        opponent_name = choice(list(self.front_surfs.keys()))
+        self.opponent = Opponent(opponent_name , self.front_surfs[opponent_name], self.all_sprites)
+
+        # ui
+        self.ui = UI(self.monster) 
 
     def import_assets(self):
         self.back_surfs = folder_importer('images', 'back')
-        self.bg_surfs = folder_importer('images', 'other')
         self.front_surfs = folder_importer('images', 'front')
+        self.bg_surfs = folder_importer('images', 'other')
+        
+    def draw_monster_floor(self):
+        for sprite in self.all_sprites:
+            floor_rect = self.bg_surfs['floor'].get_frect(center = sprite.rect.midbottom + pygame.Vector2(0, -10))
+            self.display_surface.blit(self.bg_surfs['floor'], floor_rect)
 
     def run(self):
         while self.running:
@@ -38,10 +47,13 @@ class Game:
            
             # update
             self.all_sprites.update(dt)
+            self.ui.update()
 
             # draw
-            self.display_surface.blit(self.bg_surfs['bg'], (0,0))  
+            self.display_surface.blit(self.bg_surfs['bg'], (0,0))
+            self.draw_monster_floor()  
             self.all_sprites.draw(self.display_surface)
+            self.ui.draw()
             pygame.display.update()
         
         pygame.quit()
