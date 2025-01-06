@@ -13,20 +13,50 @@ class Game:
         self.clock = pygame.time.Clock()
         self.running = True
         self.import_assets()
+        self.player_active = True
 
         # groups 
         self.all_sprites = pygame.sprite.Group()
 
         # data
         player_monster_list = ['Sparchu', 'Cleaf', 'Jacana', 'Atrox', 'Charmadillo', 'Pouch']
-        self.player_monsters = [Monster(name, self.back_surfs[name], self.simple_surfs[name]) for name in player_monster_list]
+        self.player_monsters = [Monster(name, self.back_surfs[name]) for name in player_monster_list]
         self.monster = self.player_monsters[0]
         self.all_sprites.add(self.monster)
         opponent_name = choice(list(self.front_surfs.keys()))
         self.opponent = Opponent(opponent_name , self.front_surfs[opponent_name], self.all_sprites)
 
         # ui
-        self.ui = UI(self.monster, self.player_monsters) 
+        self.ui = UI(self.monster, self.player_monsters, self.simple_surfs, self.get_input)
+
+        # timers
+        self.timers = {'player end': Timer(1000, func = self.opponent_turn), 'opponent end': Timer(1000, func = self.player_turn)} 
+
+    def get_input(self, state, data = None):
+        if state == 'attack':
+            self.apply_attack(self.opponent, data)
+
+        elif state == 'escape':
+            self.running = False
+        self.player_active = False
+        self.timers['player end'].activate()
+
+    def apply_attack(self, target, attack):
+        target.health -= ABILITIES_DATA[attack]['damage'] * ELEMENT_DATA[ABILITIES_DATA[attack]['element']][target.element]
+        print(target.health)
+        
+            
+    def opponent_turn(self):
+        attack = choice(self.opponent.abilities)
+        self.apply_attack(self.monster, attack)
+        self.timers['opponent end'].activate()
+    
+    def player_turn(self):
+        self.player_active = True
+
+    def update_timers(self):
+        for timer in self.timers.values():
+            timer.update()
 
     def import_assets(self):
         self.back_surfs = folder_importer('images', 'back')
@@ -47,8 +77,10 @@ class Game:
                     self.running = False
            
             # update
+            self.update_timers()
             self.all_sprites.update(dt)
-            self.ui.update()
+            if self.player_active:
+                self.ui.update()
 
             # draw
             self.display_surface.blit(self.bg_surfs['bg'], (0,0))

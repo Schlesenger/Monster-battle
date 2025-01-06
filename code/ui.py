@@ -2,12 +2,14 @@ from settings import*
 from math import ceil
 
 class UI:
-    def __init__(self, monster, player_monsters):
+    def __init__(self, monster, player_monsters, simple_surfs, get_input):
         self.display_surface = pygame.display.get_surface()
         self.font = pygame.font.Font(None, 30)
         self.left = WINDOW_WIDTH / 2 -100
         self.top = WINDOW_HEIGHT / 2 + 50
         self.monster = monster
+        self.simple_surfs = simple_surfs
+        self.get_input = get_input
 
         # control
         self.general_options = ['attack', 'heal', 'switch', 'escape']
@@ -32,10 +34,30 @@ class UI:
             self.attack_index['row'] = (self.attack_index['row'] + int(keys[pygame.K_DOWN]) - int(keys[pygame.K_UP])) % self.rows
             self.attack_index['col'] = (self.attack_index['col'] + int(keys[pygame.K_RIGHT]) - int(keys[pygame.K_LEFT])) % self.cols
             if keys[pygame.K_SPACE]:
-                pass
+                attack = self.monster.abilities[self.attack_index['col'] + self.attack_index['row'] * 2]
+                self.get_input(self.state, attack)
+                self.state = 'general'
         
         elif self.state == 'switch':
             self.switch_index = (self.switch_index + int(keys[pygame.K_DOWN]) - int(keys[pygame.K_UP])) % len(self.available_monsters)
+
+            if keys[pygame.K_SPACE]:
+                self.get_input(self.state, self.available_monsters[self.switch_index])
+                self.state = 'general'
+            
+        elif self.state == 'heal':
+            self.get_input('heal')
+            self.state = 'general'
+
+        elif self.state == 'escape':
+            self.get_input('escape')
+            self.state = 'general'
+
+        if keys[pygame.K_ESCAPE]:
+            self.state = 'general'
+            self.general_index = {'col': 0, 'row': 0}
+            self.attack_index = {'col': 0, 'row': 0}
+            self.switch_index = 0
 
     def quad_select(self, index, options):
         # bg
@@ -57,7 +79,7 @@ class UI:
 
     def switch(self):
         # bg
-        rect = pygame.FRect(self.left + 40, self.top - 100, 400, 400)
+        rect = pygame.FRect(self.left + 40, self.top - 140, 400, 400)
         pygame.draw.rect(self.display_surface, COLORS['white'], rect, 0, 4)
         pygame.draw.rect(self.display_surface, COLORS['gray'], rect, 4, 4)
 
@@ -68,14 +90,15 @@ class UI:
             y = rect.top + rect.height / (self.visible_monsters * 2) + rect.height / self.visible_monsters * i + v_offset
             color = COLORS['gray'] if i == self.switch_index else COLORS['black']
             name = self.available_monsters[i].name
-            simple_image = self.available_monsters[i].simple_image
+
+            simple_surf = self.simple_surfs[name]
+            simple_rect = simple_surf.get_frect(center = (x - 100, y))
 
             text_surf = self.font.render(name, True, color)
-            text_rect = text_surf.get_frect(center = (x, y))
-            image_rect = simple_image.get_frect(center = (x - 100, y))
+            text_rect = text_surf.get_frect(midleft = (x, y))
             if rect.collidepoint(text_rect.center):
                 self.display_surface.blit(text_surf, text_rect)
-                self.display_surface.blit(simple_image, image_rect)
+                self.display_surface.blit(simple_surf, simple_rect)
 
     def update(self):
         self.input()
