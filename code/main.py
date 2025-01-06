@@ -3,7 +3,7 @@ from support import *
 from world_timer import Timer
 from monster import Monster, Opponent
 from random import choice
-from ui import UI
+from ui import*
 
 class Game:
     def __init__(self):
@@ -28,6 +28,7 @@ class Game:
 
         # ui
         self.ui = UI(self.monster, self.player_monsters, self.simple_surfs, self.get_input)
+        self.opponent_ui = OpponentUI(self.opponent)
 
         # timers
         self.timers = {'player end': Timer(1000, func = self.opponent_turn), 'opponent end': Timer(1000, func = self.player_turn)} 
@@ -43,7 +44,7 @@ class Game:
 
     def apply_attack(self, target, attack):
         target.health -= ABILITIES_DATA[attack]['damage'] * ELEMENT_DATA[ABILITIES_DATA[attack]['element']][target.element]
-        print(target.health)
+        print(f'{target.health}/{target.max_health}')
         
             
     def opponent_turn(self):
@@ -81,12 +82,15 @@ class Game:
             self.all_sprites.update(dt)
             if self.player_active:
                 self.ui.update()
+            else:
+                self.opponent_ui.update(self.opponent)
 
             # draw
             self.display_surface.blit(self.bg_surfs['bg'], (0,0))
             self.draw_monster_floor()  
             self.all_sprites.draw(self.display_surface)
             self.ui.draw()
+            self.opponent_ui.draw()
             pygame.display.update()
         
         pygame.quit()
