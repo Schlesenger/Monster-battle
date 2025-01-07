@@ -14,6 +14,7 @@ class Game:
         self.clock = pygame.time.Clock()
         self.running = True
         self.import_assets()
+        self.audio['music'].play(-1)
         self.player_active = True
 
         # groups 
@@ -40,6 +41,7 @@ class Game:
         elif state == 'heal':
             self.monster.health += 50
             AttackAnimationSprite(self.monster, self.attack_frames['green'], self.all_sprites)
+            self.audio['green'].play()
         elif state == 'switch':
             self.monster.kill()
             self.monster = data
@@ -54,6 +56,7 @@ class Game:
         attack_data = ABILITIES_DATA[attack]
         target.health -= attack_data['damage'] * ELEMENT_DATA[attack_data['element']][target.element]
         AttackAnimationSprite(target, self.attack_frames[attack_data['animation']], self.all_sprites)
+        self.audio[attack_data['animation']].play()
                
     def opponent_turn(self):
         if self.opponent.health <= 0:
@@ -80,7 +83,6 @@ class Game:
             else:
                 self.running = False 
 
-
     def update_timers(self):
         for timer in self.timers.values():
             timer.update()
@@ -91,6 +93,7 @@ class Game:
         self.simple_surfs = folder_importer('images', 'simple')
         self.bg_surfs = folder_importer('images', 'other')
         self.attack_frames = tile_importer(4, 'images', 'attacks')
+        self.audio = audio_importer('audio')
         
     def draw_monster_floor(self):
         for sprite in self.all_sprites:
